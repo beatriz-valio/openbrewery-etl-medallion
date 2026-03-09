@@ -35,10 +35,10 @@ airflow-logs:
 	docker compose logs -f --tail=200
 
 test:
-	pytest -q
+	pytest --cov=src --cov-report=term-missing tests
 
 lint:
-	flake8 . --max-line-length=100
+	flake8 . --max-line-length=110
 
 format:
 	black .

@@ -76,6 +76,7 @@ The main DAG is defined in `dags/openbrewery_medallion.py` and runs daily. Each 
 
 ### Prerequisites
 
+- Python installed
 - Docker Desktop
 - Linux containers / WSL2 enabled
 - Make installed
@@ -118,18 +119,17 @@ All outputs are written under the local `data/` directory, organized by layer, `
 ### Running Tests
 
 The tests use pytest and cover:
-- API client (tests/test_clients_openbrewery.py).
-- Ingestion and transformation jobs (tests/test_jobs_bronze.py, tests/test_jobs_silver_gold.py).
-- Data quality (tests/test_data_quality.py).
+- `src/clients/openbrewery.py`
+- `src/jobs/bronze.py`
+- `src/jobs/silver.py`
+- `src/jobs/gold.py`
+- `src/data_quality/checks.py`
+- `src/jobs/publish.py`
+- `src/paths/lake.py`       
 
-Locally (outside Docker):
+Locally:
 ```bash
 make test
-```
-
-Or inside an Airflow container (e.g., webserver):
-```bash
-docker compose exec airflow-webserver pytest -q
 ```
 
 ## Monitoring and Data Quality

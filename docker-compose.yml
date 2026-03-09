@@ -32,6 +32,7 @@ services:
       - ./src:/opt/airflow/src
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
+      - ./tests:/opt/airflow/tests
     ports:
       - "8080:8080"
     command: webserver
@@ -54,6 +55,7 @@ services:
       - ./src:/opt/airflow/src
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
+      - ./tests:/opt/airflow/tests
     command: scheduler
 
   airflow-init:
@@ -72,6 +74,7 @@ services:
       - ./src:/opt/airflow/src
       - ./data:/opt/airflow/data
       - ./logs:/opt/airflow/logs
+      - ./tests:/opt/airflow/tests
     command: >
       bash -lc "airflow db init &&
       airflow users create --username ${AIRFLOW_ADMIN_USER:-airflow}
