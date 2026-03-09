@@ -1,0 +1,5 @@
+apache-airflow==2.8.4
+pandas>=2.0,<3.0
+pyarrow>=14,<20
+pytest>=7,<9
+requests>=2.31,<3

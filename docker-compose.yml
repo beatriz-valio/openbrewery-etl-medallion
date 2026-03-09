@@ -14,7 +14,8 @@ services:
       retries: 10
 
   airflow-webserver:
-    image: apache/airflow:2.8.4
+    build: .
+    image: openbrewery-airflow:latest
     depends_on:
       postgres:
         condition: service_healthy
@@ -30,12 +31,14 @@ services:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./data:/opt/airflow/data
+      - ./logs:/opt/airflow/logs
     ports:
       - "8080:8080"
     command: webserver
 
   airflow-scheduler:
-    image: apache/airflow:2.8.4
+    build: .
+    image: openbrewery-airflow:latest
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,10 +53,12 @@ services:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./data:/opt/airflow/data
+      - ./logs:/opt/airflow/logs
     command: scheduler
 
   airflow-init:
-    image: apache/airflow:2.8.4
+    build: .
+    image: openbrewery-airflow:latest
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,6 +71,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./data:/opt/airflow/data
+      - ./logs:/opt/airflow/logs
     command: >
       bash -lc "airflow db init &&
       airflow users create --username ${AIRFLOW_ADMIN_USER:-airflow}
