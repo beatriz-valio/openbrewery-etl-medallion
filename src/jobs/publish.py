@@ -17,7 +17,7 @@ def publish_gold(base_path: str, ds: str, run_id: str) -> None:
     gold_file = gold_breweries_result_path(base_path, ds, run_id)
 
     if not gold_file.exists():
-        raise FileNotFoundError(f"Gold file não encontrado: {gold_file}")
+        raise FileNotFoundError(f"Gold file not found: {gold_file}")
 
     success_path = run_dir / "_SUCCESS"
     success_path.write_text("", encoding="utf-8")
