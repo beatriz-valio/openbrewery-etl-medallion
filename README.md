@@ -1,6 +1,6 @@
 # Brewery Medallion Pipeline (Airflow)
 
-This project implements a daily medallion-style data pipeline for the Open Brewery DB API using Apache Airflow, Pandas and PyArrow.
+This project implements a daily medallion-style data pipeline for the [Open Brewery DB API](https://www.openbrewerydb.org) using Python, Apache Airflow, Pandas, PyArrow and Docker.
 
 It ingests brewery data into a local data lake and organizes it into three layers:
 
@@ -28,10 +28,10 @@ The pipeline is designed for reproducibility, reprocessing and portability to cl
 
 - **Silver (`data/silver/breweries/ingestion_date={ds}/run_id={run_id}/`)**
   - Written in Parquet by the `bronze_to_silver` job using Pandas + PyArrow.
-  - Partitioned by `country` and `state_province`.
+  - Partitioned by `country` and `state_province` (`state` is deprecated, according with openbrewerydb documentation).
   - Normalizations:
     - standardizes column names to lowercase
-    - canonicalizes `state` into `state_province`
+    - standardizes the content of the columns eliminating accents
     - replaces null, blank, or `none` values in key dimensions with `unknown`
     - casts latitude and longitude to `double`
     - removes duplicate records by `id`
