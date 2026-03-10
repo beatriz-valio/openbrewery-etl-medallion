@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Dict, Iterator, List
 
@@ -50,7 +51,7 @@ def fetch_all_breweries(
                 timeout=timeout_sec,
             )
             response.raise_for_status()
-            data = response.json()
+            data = json.loads(response.content.decode("utf-8"))
             if not data:
                 break
 
