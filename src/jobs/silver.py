@@ -1,5 +1,5 @@
 import logging
-import re
+import unicodedata
 import shutil
 from pathlib import Path
 
@@ -8,6 +8,14 @@ import pandas as pd
 from src.paths.lake import bronze_breweries_file, silver_breweries_dir
 
 logger = logging.getLogger(__name__)
+
+
+TEXT_COLUMNS = ["country", "state_province", "city", "brewery_type"]
+NUMERIC_COLUMNS = ["latitude", "longitude"]
+KNOWN_STATE_FIXES = {
+    "K�rnten": "Karnten",
+    "Nieder�sterreich": "Niederosterreich",
+}
 
 
 def bronze_to_silver(base_path: str, ds: str, run_id: str) -> None:
@@ -31,11 +39,11 @@ def bronze_to_silver(base_path: str, ds: str, run_id: str) -> None:
     df.columns = [str(col).strip().lower() for col in df.columns]
     logger.info("Columns normalized: columns=%s", df.columns.tolist())
 
-    for col in ["country", "state_province", "city", "brewery_type"]:
+    for col in TEXT_COLUMNS:
         df = _normalize_text_col(df, col)
     logger.info("Data normalization completed for text columns")
 
-    for col in ["latitude", "longitude"]:
+    for col in NUMERIC_COLUMNS:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
     logger.info("Latitude and longitude converted to numeric")
@@ -48,15 +56,11 @@ def bronze_to_silver(base_path: str, ds: str, run_id: str) -> None:
     df["ingestion_date"] = ds
     df["run_id"] = run_id
 
-    row_count = len(df)
-
     if silver_root.exists():
         shutil.rmtree(silver_root)
     silver_root.mkdir(parents=True, exist_ok=True)
 
-    logger.info(
-        "Partitioning data by country and state_province - state column deprecated"
-    )
+    logger.info("Partitioning data by country and state_province")
     grouped = df.groupby(["country", "state_province"], dropna=False, sort=True)
 
     logger.info(
@@ -64,9 +68,7 @@ def bronze_to_silver(base_path: str, ds: str, run_id: str) -> None:
     )
     for (country, state_province), partition_df in grouped:
         partition_dir = (
-            silver_root
-            / f"country={_safe_partition_value(country)}"
-            / f"state_province={_safe_partition_value(state_province)}"
+            silver_root / f"country={country}" / f"state_province={state_province}"
         )
         partition_dir.mkdir(parents=True, exist_ok=True)
 
@@ -79,7 +81,7 @@ def bronze_to_silver(base_path: str, ds: str, run_id: str) -> None:
     logger.info(
         "Silver: path=%s rows=%s ingestion_date=%s run_id=%s",
         silver_root,
-        row_count,
+        len(df),
         ds,
         run_id,
     )
@@ -89,16 +91,29 @@ def _normalize_text_col(df: pd.DataFrame, col: str) -> pd.DataFrame:
     if col not in df.columns:
         return df
 
-    s = df[col].astype("string").str.strip()
-    df[col] = s.mask(
-        s.isna() | (s == "") | (s.str.lower() == "none"),
+    string = df[col].astype("string").str.strip()
+
+    string = string.mask(
+        string.isna() | (string == "") | (string.str.lower() == "none"),
         "unknown",
     )
+
+    if col == "state_province":
+        string = string.replace(KNOWN_STATE_FIXES)
+
+    string = string.apply(
+        lambda value: (
+            "".join(
+                char
+                for char in unicodedata.normalize("NFKD", value)
+                if not unicodedata.combining(char)
+            )
+            if pd.notna(value)
+            else value
+        )
+    )
+
+    string = string.str.replace(r'[\\/:*?"<>|]', "_", regex=True)
+
+    df[col] = string
     return df
-
-
-def _safe_partition_value(value: object) -> str:
-    text = "unknown" if pd.isna(value) else str(value).strip()
-    if not text or text.lower() == "none":
-        text = "unknown"
-    return re.sub(r'[\\/:*?"<>|]', "_", text)
