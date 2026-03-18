@@ -76,7 +76,7 @@ The main DAG is defined in `dags/openbrewery_medallion.py` and runs daily. Each 
 
 ### Prerequisites
 
-- Python installed
+- Python 3.11 installed
 - Docker Desktop
 - Linux containers / WSL2 enabled
 - Make installed
